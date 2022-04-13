@@ -61,17 +61,20 @@ for ligne in f:
 
     if ope == "B":
         sign = "-" if (val >> 23) & 0x1 else ""
+        if(cond == ""): cond = "  "
         print("B"+cond+"   #"+sign+str(val & 0x7FFFFF))
     elif ope == "mem":
         print("mem",cond," ",calc," ",rn," ",rm)
     elif ope == "calc":
-        save = "S" if (val >> 20) & 1 else " "
+        save = "S" if (val >> 20) & 1 and calc != "CMP" else " "
         imm = (val >> 25) & 1
         sign = "-" if imm and (val >> 11) & 1 else ""
+        reg1 = "  R"+str(rd)+"," if calc != "CMP" else "  "
+        reg2 = "R"+str(rn)
         if imm:
-            print(calc+cond+save+"  R"+str(rd)+",R"+str(rn)+",#"+str(rm))
+            print(calc+cond+save+reg1+reg2+",#"+str(rm))
         else:
-            print(calc+cond+save+"  R"+str(rd)+",R"+str(rn)+",R"+str(rm&0xF))
+            print(calc+cond+save+reg1+reg2+",R"+str(rm&0xF))
     else:
         print("Error: no type found")
         exit(1)

@@ -116,13 +116,13 @@ def pre_compile():
         args = t[1].split(',')
         t[0] += "   "
         if(t[0][:3] == "ADD"): res = condcond(0xE) + calc(ADD, t[0][3] == "S", args[2][0] =='#',int(args[1][1:]),int(args[0][1:]),int(args[2][1:]))
-        if(t[0][:3] == "SUB"): res = condcond(0xE) + calc(SUB, t[0][3] == "S", args[2][0] =='#',int(args[1][1:]),int(args[0][1:]),int(args[2][1:]))
-        if(t[0][:3] == "ORR"): res = condcond(0xE) + calc(ORR, t[0][3] == "S", args[2][0] =='#',int(args[1][1:]),int(args[0][1:]),int(args[2][1:]))
-        if(t[0][:3] == "AND"): res = condcond(0xE) + calc(AND, t[0][3] == "S", args[2][0] =='#',int(args[1][1:]),int(args[0][1:]),int(args[2][1:]))
-        if(t[0][:3] == "CMP"): res = condcond(0xE) + calc(CMP, 1, 1,int(args[0][1:]),int(args[0][1:]),int(args[1][1:]))
-        if(t[0][:3] == "LDR"): res = 0
-        if(t[0][:3] == "STR"): res = 0
-        if(t[0][0] == "B"):
+        elif(t[0][:3] == "SUB"): res = condcond(0xE) + calc(SUB, t[0][3] == "S", args[2][0] =='#',int(args[1][1:]),int(args[0][1:]),int(args[2][1:]))
+        elif(t[0][:3] == "ORR"): res = condcond(0xE) + calc(ORR, t[0][3] == "S", args[2][0] =='#',int(args[1][1:]),int(args[0][1:]),int(args[2][1:]))
+        elif(t[0][:3] == "AND"): res = condcond(0xE) + calc(AND, t[0][3] == "S", args[2][0] =='#',int(args[1][1:]),int(args[0][1:]),int(args[2][1:]))
+        elif(t[0][:3] == "CMP"): res = condcond(0xE) + calc(CMP, 1, 1,int(args[0][1:]),int(args[0][1:]),int(args[1][1:]))
+        elif(t[0][:3] == "LDR"): res = 0
+        elif(t[0][:3] == "STR"): res = 0
+        elif(t[0][0] == "B"):
             condition = t[0][4:]+"AL"
             if(t[1][0] == '.'):
                 if(t[1][1:] in adrs.keys()):
@@ -135,6 +135,9 @@ def pre_compile():
                     continue
             else:
                 res = B(int(t[1][1:])) + condcond(get_cond(condition[:2]))
+        else:
+            print(t[0]+" ("+str(args)+") Non reconnu")
+            continue
         out.write(str(res)+"\n")
         pc += 1
     out.close()
@@ -156,7 +159,7 @@ def compile_with_adrs(adrs):
                 if(dist > TAILLE_INSTR or dist < -TAILLE_INSTR):
                     res = B(dist) + condcond(get_cond(condition[:2]))
             else:
-                print("Erreur Balise " + t[1][1:-1] + " non définie")
+                print("Erreur ligne :"+str(pc)+"\n    Balise '" + t[1][1:] + "' non définie")
                 print(adrs)
                 exit(1)
         else:
@@ -180,6 +183,6 @@ def clean():
 if __name__ == "__main__":
     rewrite()
     adrs = pre_compile()
-    print(adrs)
     compile_with_adrs(adrs)
     clean()
+    print("Compilation ok")
