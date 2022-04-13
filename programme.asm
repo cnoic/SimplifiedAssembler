@@ -1,19 +1,12 @@
-mov     r0, #50
-b       .LBB0_1
+mov     r0, #50                        @R0 est notre i
+mov     r1, #0                         @R1 est notre somme
 .LBB0_1:
-cmp     r0, #1
-blt     .LBB0_6
-b       .LBB0_2
+cmp     r0, #1                         @condition d'arrêt
+blt     .LBB0_3                        @arrêt
+tst     r0, #1                         @si i impair
+bne     .LBB0_2                        @si i pair on skip
+add     r1, r1, r0                     @sinon on add a la somme
 .LBB0_2:
-tst     r0, #1
-beq     .LBB0_4
-b       .LBB0_3
+sub     r0, r0, #1                     @on decr i
+b       .LBB0_1                        @on recommence
 .LBB0_3:
-add     r0, r0, r1
-b       .LBB0_4
-.LBB0_4:
-b       .LBB0_5
-.LBB0_5:
-sub     r0, r0, #1
-b       .LBB0_1
-.LBB0_6:
