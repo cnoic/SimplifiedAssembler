@@ -1,5 +1,4 @@
-##SimplifiedISACompiler
-
+## SimplifiedISACompiler
 Pour l'ajouter a votre repo sans effort:
 
 ```bash
