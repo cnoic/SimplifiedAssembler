@@ -38,7 +38,8 @@ f = open("memfile.dat", "r")
 pc = 0
 for ligne in f:
     str_len = "%X" % (pc*TAILLE_INSTR)
-    print(max(4-len(str(str_len)),0)*' '+str_len,end='  : ')
+    print(max(4-len(str(str_len)),0)*' '+str_len,end=':  ')
+    print(ligne[:-1],end ='     ')
     pc += 1
     val = hex_string_to_int(ligne[:-1])
     cond = findinlist(hex_string_to_int(ligne[0]),conds)
@@ -69,7 +70,7 @@ for ligne in f:
         if(cond == ""): cond = "  "
         diff = ((0xFFFFFF-val+1 if sign == '-' else val)) & 0xFFFFFF
         straff = sign+str(diff)
-        print("B"+cond+"   #"+straff+(10-len(straff))*" "+"-> "+"%X" % (pc*TAILLE_INSTR-TAILLE_INSTR+(-diff if sign == '-' else diff)))
+        print("B"+cond+"   #"+straff+(17-len(straff))*" "+"-> "+"%X" % (pc*TAILLE_INSTR-TAILLE_INSTR+(-diff if sign == '-' else diff)))
         continue
     if ope == "mem":
         print("mem",cond," ",calc," ",rn," ",rm)
@@ -78,15 +79,15 @@ for ligne in f:
         save = "S" if (val >> 20) & 1 and calc != "CMP" else " "
         imm = (val >> 25) & 1
         sign = "-" if imm and (val >> 11) & 1 else ""
-        reg1 = "  R"+str(rd)+"," if calc != "CMP" else "  "
+        reg1 = "  R"+str(rd)+",  " if calc != "CMP" else "  "
         reg2 = "R"+str(rn)
         if(calc == "AND" and rd == rn and rd == rm and not (val >> 20) & 1):
             print("NOP")
             continue
         if imm:
-            print(calc+cond+save+reg1+reg2+",#"+str(rm))
+            print(calc+cond+save+reg1+reg2+",  #"+str(rm))
             continue
-        print(calc+cond+save+reg1+reg2+",R"+str(rm&0xF))
+        print(calc+cond+save+reg1+reg2+",  R"+str(rm&0xF))
         continue
     print("Error: no type found")
     exit(1)
