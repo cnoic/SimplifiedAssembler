@@ -16,7 +16,7 @@ conds = [
 ["LT",0b1011],
 ["GT",0b1100],
 ["LE",0b1101],
-["AL",0b1110],
+["",0b1110],
 ["--",0b1111]]
 
 #calcul
@@ -59,6 +59,11 @@ def calc(ope, store : bool, use_imm : bool, rn, rd, immrm):
 def condcond(cond):
     return (cond << 28)
 
+def get_modifiers(modif):
+    if(len(modif) == 0): return "",""
+    if(len(modif) == 1): return modif[0], ""
+    return modif[2:],modif[0:2]
+
 #ADD RD,RS,RS
 #ADD RD,RS,#12
 #SUB
@@ -75,6 +80,8 @@ def rewrite():
     f = open("programme.asm", "r")
     out = open("programme_r.asm", "w")
     for ligne in f:
+        if(ligne == "\n"):
+            continue
         if(ligne[0] == '.'):
             index = ligne.find(':')
             if index == -1:
@@ -88,16 +95,20 @@ def rewrite():
         ligne = ligne.replace(", ", ",")
         ligne = ligne.replace(" ,", ",")
         t = ligne.split()
-        args = t[1].split(',')
         if(t[0][:3] == "MOV"):
-            ligne = "SUB"+t[0][3:]+" "+args[0]+"," +args[0]+","+args[0]+"\n"
-            ligne += "ADD"+t[0][3:]+" "+args[0]+","+args[0]+","+args[1]+"\n"
+            modifiers = t[0][3:]
+            savestr, condstr = get_modifiers(modifiers)
+            args = t[1].split(',')
+            ligne = "SUB"+condstr+" "+args[0]+"," +args[0]+","+args[0]+"\n"
+            ligne += "ADD"+condstr+savestr+" "+args[0]+","+args[0]+","+args[1]+"\n"
             out.write(ligne)
-        elif(t[0][:3] == "TST"):
+            continue
+        if(t[0][:3] == "TST"):
+            args = t[1].split(',')
             ligne = "ANDS R14,"+args[0]+","+args[1]+"\n"
             out.write(ligne)
-        else:
-            out.write(' '.join(t)+"\n")
+            continue
+        out.write(' '.join(t)+"\n")
     out.close()
     f.close()
 
@@ -113,31 +124,54 @@ def pre_compile():
             continue
         res = 0
         t = ligne.split()
-        args = t[1].split(',')
-        t[0] += " "
-        if(t[0][:3] == "ADD"): res = condcond(0xE) + calc(ADD, t[0][3] == "S", args[2][0] =='#',int(args[1][1:]),int(args[0][1:]),int(args[2][1:]))
-        elif(t[0][:3] == "SUB"): res = condcond(0xE) + calc(SUB, t[0][3] == "S", args[2][0] =='#',int(args[1][1:]),int(args[0][1:]),int(args[2][1:]))
-        elif(t[0][:3] == "ORR"): res = condcond(0xE) + calc(ORR, t[0][3] == "S", args[2][0] =='#',int(args[1][1:]),int(args[0][1:]),int(args[2][1:]))
-        elif(t[0][:3] == "AND"): res = condcond(0xE) + calc(AND, t[0][3] == "S", args[2][0] =='#',int(args[1][1:]),int(args[0][1:]),int(args[2][1:]))
-        elif(t[0][:3] == "CMP"): res = condcond(0xE) + calc(CMP, 1, 1,int(args[0][1:]),int(args[0][1:]),int(args[1][1:]))
-        elif(t[0][:3] == "LDR"): res = 0
-        elif(t[0][:3] == "STR"): res = 0
-        elif(t[0][0] == "B"):
-            condition = t[0][1:3] if len(t[0]) > 3 else "AL"
-            if(t[1][0] == '.'):
-                if(t[1][1:] in adrs.keys()):
-                    dist = (pc - adrs[t[1][1:]])* TAILLE_INSTR
-                    dist += (1<<23)
-                    res = B(dist) + condcond(get_cond(condition))
-                else:
-                    out.write(ligne)
-                    pc += 1
-                    continue
-            else:
-                res = B(int(t[1][1:])) + condcond(get_cond(condition))
-        else:
-            print(t[0]+" ("+str(args)+") Non reconnu")
+        if(len(t) == 0):
             continue
+        t[0] += ""
+        if(t[0][:3] == "NOP"): res = condcond(0xE)
+        else:
+            if(len(t) != 2):
+                print("Erreur ligne :"+str(pc)+"\n    Syntax error '"+ligne[:-1]+"'")
+                print("Evitez les espaces dans les arguments")
+                exit(1)
+            args = t[1].split(',')
+            if(t[0][:3] == "ADD"): 
+                modifiers = t[0][3:]
+                savestr, condstr = get_modifiers(modifiers)
+                res = condcond(get_cond(condstr)) + calc(ADD, savestr == "S", args[2][0] =='#',int(args[1][1:]),int(args[0][1:]),int(args[2][1:]))
+            elif(t[0][:3] == "SUB"): 
+                modifiers = t[0][3:]
+                savestr, condstr = get_modifiers(modifiers)
+                res = condcond(get_cond(condstr)) + calc(SUB, savestr == "S", args[2][0] =='#',int(args[1][1:]),int(args[0][1:]),int(args[2][1:]))
+            elif(t[0][:3] == "ORR"): 
+                modifiers = t[0][3:]
+                savestr, condstr = get_modifiers(modifiers)
+                res = condcond(get_cond(condstr)) + calc(ORR, savestr == "S", args[2][0] =='#',int(args[1][1:]),int(args[0][1:]),int(args[2][1:]))
+            elif(t[0][:3] == "AND"): 
+                modifiers = t[0][3:]
+                savestr, condstr = get_modifiers(modifiers)
+                res = condcond(get_cond(condstr)) + calc(AND, savestr == "S", args[2][0] =='#',int(args[1][1:]),int(args[0][1:]),int(args[2][1:]))
+            elif(t[0][:3] == "CMP"): 
+                modifiers = t[0][3:]
+                savestr, condstr = get_modifiers(modifiers)
+                res = condcond(get_cond(condstr)) + calc(CMP, 1, 1,int(args[0][1:]),int(args[0][1:]),int(args[1][1:]))
+            elif(t[0][:3] == "LDR"): res = 0
+            elif(t[0][:3] == "STR"): res = 0
+            elif(t[0][0] == "B"):
+                condition = t[0][1:3] if len(t[0]) > 2 else ""
+                if(t[1][0] == '.'):
+                    if(t[1][1:] in adrs.keys()):
+                        dist = (pc - adrs[t[1][1:]])* TAILLE_INSTR
+                        dist += (1<<23)
+                        res = B(dist) + condcond(get_cond(condition))
+                    else:
+                        out.write(ligne)
+                        pc += 1
+                        continue
+                else:
+                    res = B(int(t[1][1:])) + condcond(get_cond(condition))
+            else:
+                print(t[0]+" ("+str(args)+") Non reconnu")
+                continue
         out.write(str(res)+"\n")
         pc += 1
     out.close()
@@ -158,6 +192,8 @@ def compile_with_adrs(adrs):
                 dist = (adrs[t[1][1:]] - pc)* TAILLE_INSTR
                 if(dist > TAILLE_INSTR or dist < -TAILLE_INSTR):
                     res = B(dist) + condcond(get_cond(condition[:2]))
+                else:
+                    res = condcond(get_cond("--"))
             else:
                 print("Erreur ligne :"+str(pc)+"\n    Balise '" + t[1][1:] + "' non définie")
                 print(adrs)
@@ -173,7 +209,8 @@ def clean():
     f = open("memfile_no.pre", "r")
     out = open("memfile.dat", "w")
     for ligne in f:
-        if ligne != "00000000\n": out.write(ligne)
+        if ligne != "F0000000\n": out.write(ligne)
+        #out.write(ligne)
     out.close()
     f.close()
     os.remove("programme_r.asm")
