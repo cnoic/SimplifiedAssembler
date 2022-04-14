@@ -1,5 +1,5 @@
 import os
-TAILLE_INSTR = 1
+TAILLE_INSTR = 4
 #cond
 conds = [
 ["EQ",0b0000],
@@ -159,9 +159,9 @@ def pre_compile():
             elif(t[0][0] == "B"):
                 condition = t[0][1:3] if len(t[0]) > 2 else ""
                 if(t[1][0] == '.'):
-                    if(t[1][1:] in adrs.keys()):
+                    if(t[1][1:] in adrs.keys()): #backwards branch
                         dist = (pc - adrs[t[1][1:]])* TAILLE_INSTR
-                        dist += (1<<23)
+                        dist = 0xFFFFFF - dist + 1
                         res = B(dist) + condcond(get_cond(condition))
                     else:
                         out.write(ligne)
@@ -188,9 +188,9 @@ def compile_with_adrs(adrs):
         t = ligne.split()
         if(t[0][0] == "B"):
             condition = t[0][1:]+"AL"
-            if(t[1][1:] in adrs.keys()):
+            if(t[1][1:] in adrs.keys()): #forward branch
                 dist = (adrs[t[1][1:]] - pc)* TAILLE_INSTR
-                if(dist > TAILLE_INSTR or dist < -TAILLE_INSTR):
+                if(dist >= TAILLE_INSTR or dist <= -TAILLE_INSTR):
                     res = B(dist) + condcond(get_cond(condition[:2]))
                 else:
                     res = condcond(get_cond("--"))
@@ -220,6 +220,7 @@ def clean():
 if __name__ == "__main__":
     rewrite()
     adrs = pre_compile()
+    print(adrs)
     compile_with_adrs(adrs)
     clean()
     print("Compilation ok")

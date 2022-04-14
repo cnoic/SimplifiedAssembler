@@ -1,3 +1,4 @@
+TAILLE_INSTR = 4
 conds = [
 ["EQ",0b0000],
 ["NE",0b0001],
@@ -34,7 +35,11 @@ hex_string_to_int = lambda x: int(x,16)
 
 
 f = open("memfile.dat", "r")
+pc = 0
 for ligne in f:
+    str_len = "%X" % (pc*TAILLE_INSTR)
+    print(max(4-len(str(str_len)),0)*' '+str_len,end='  : ')
+    pc += 1
     val = hex_string_to_int(ligne[:-1])
     cond = findinlist(hex_string_to_int(ligne[0]),conds)
     if len(cond) == 0:
@@ -62,7 +67,9 @@ for ligne in f:
     if ope == "B":
         sign = "-" if (val >> 23) & 0x1 else ""
         if(cond == ""): cond = "  "
-        print("B"+cond+"   #"+sign+str(val & 0x7FFFFF))
+        diff = ((0xFFFFFF-val+1 if sign == '-' else val)) & 0xFFFFFF
+        straff = sign+str(diff)
+        print("B"+cond+"   #"+straff+(10-len(straff))*" "+"-> "+"%X" % (pc*TAILLE_INSTR-TAILLE_INSTR+(-diff if sign == '-' else diff)))
         continue
     if ope == "mem":
         print("mem",cond," ",calc," ",rn," ",rm)
