@@ -79,7 +79,3 @@ for ligne in f:
         print("Error: no type found")
         exit(1)
 f.close()
-
-
-
-
