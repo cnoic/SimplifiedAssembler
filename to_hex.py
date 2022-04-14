@@ -114,7 +114,7 @@ def pre_compile():
         res = 0
         t = ligne.split()
         args = t[1].split(',')
-        t[0] += "   "
+        t[0] += " "
         if(t[0][:3] == "ADD"): res = condcond(0xE) + calc(ADD, t[0][3] == "S", args[2][0] =='#',int(args[1][1:]),int(args[0][1:]),int(args[2][1:]))
         elif(t[0][:3] == "SUB"): res = condcond(0xE) + calc(SUB, t[0][3] == "S", args[2][0] =='#',int(args[1][1:]),int(args[0][1:]),int(args[2][1:]))
         elif(t[0][:3] == "ORR"): res = condcond(0xE) + calc(ORR, t[0][3] == "S", args[2][0] =='#',int(args[1][1:]),int(args[0][1:]),int(args[2][1:]))
@@ -123,18 +123,18 @@ def pre_compile():
         elif(t[0][:3] == "LDR"): res = 0
         elif(t[0][:3] == "STR"): res = 0
         elif(t[0][0] == "B"):
-            condition = t[0][4:]+"AL"
+            condition = t[0][1:3] if len(t[0]) > 3 else "AL"
             if(t[1][0] == '.'):
                 if(t[1][1:] in adrs.keys()):
                     dist = (pc - adrs[t[1][1:]])* TAILLE_INSTR
                     dist += (1<<23)
-                    res = B(dist) + condcond(get_cond(condition[:2]))
+                    res = B(dist) + condcond(get_cond(condition))
                 else:
                     out.write(ligne)
                     pc += 1
                     continue
             else:
-                res = B(int(t[1][1:])) + condcond(get_cond(condition[:2]))
+                res = B(int(t[1][1:])) + condcond(get_cond(condition))
         else:
             print(t[0]+" ("+str(args)+") Non reconnu")
             continue
