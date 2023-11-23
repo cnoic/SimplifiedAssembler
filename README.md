@@ -1,8 +1,8 @@
-## SimplifiedISACompiler
+## SimplifiedAssembler
 ### Pour l'ajouter a votre repo sans effort:
 
 ```bash
-git submodule add git@github.com:FoxtrotNSF/SimplifiedISACompiler.git
+git submodule add git@github.com:cnoic/SimplifiedAssembler.git
 ```
 
 ### Pour mettre a jour sans effort:
