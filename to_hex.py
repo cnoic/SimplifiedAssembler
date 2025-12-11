@@ -174,7 +174,7 @@ def pre_assemble(instructions):
             elif t[0][:3] == "CMP":
                 modifiers = t[0][3:]
                 savestr, condstr = get_modifiers(modifiers)
-                res = condcond(get_cond(condstr)) + arithmetic(CMP, True, True,
+                res = condcond(get_cond(condstr)) + arithmetic(CMP, True, args[1][0] == '#',
                                                                int(args[0][1:]),
                                                                int(args[0][1:]),
                                                                int(args[1][1:]))
